@@ -24,6 +24,9 @@ type model struct {
 	err       error
 
 	table table.Model
+
+	height int
+	width  int
 }
 
 var baseStyle = lipgloss.NewStyle().
@@ -80,8 +83,26 @@ func (m model) handleKeyUpdate(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 }
 
+func (m model) handleWindowSizeUpdate(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
+	m.height = msg.Height
+	m.width = msg.Width
+
+	cmdWidth := msg.Width - 4 - 10 - 10 - 8 - 2
+	columns := []table.Column{
+		{Title: "Time", Width: 4},
+		{Title: "Directory", Width: 10},
+		{Title: "Command", Width: cmdWidth},
+		{Title: "Population", Width: 10},
+	}
+	m.table.SetColumns(columns)
+	return m, tea.ClearScreen
+}
+
 func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := message.(type) {
+	case tea.WindowSizeMsg:
+		return m.handleWindowSizeUpdate(msg)
+
 	case tea.MouseMsg:
 		m.init = true
 		m.mouseEvent = tea.MouseEvent(msg)
@@ -136,9 +157,9 @@ func tick() tea.Cmd {
 
 func initialTable() table.Model {
 	columns := []table.Column{
-		{Title: "Rank", Width: 4},
-		{Title: "City", Width: 10},
-		{Title: "Country", Width: 10},
+		{Title: "Time", Width: 4},
+		{Title: "Directory", Width: 10},
+		{Title: "Command", Width: 30},
 		{Title: "Population", Width: 10},
 	}
 
