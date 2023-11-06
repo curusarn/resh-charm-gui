@@ -6,6 +6,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/table"
@@ -70,16 +71,24 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) handleKeyUpdate(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	var cmd, cmd2 tea.Cmd
+	var cmd tea.Cmd
 
 	switch msg.Type {
 	case tea.KeyEnter, tea.KeyCtrlC, tea.KeyEsc:
 		return m, tea.Quit
+	case tea.KeyUp, tea.KeyDown:
+		m.table, cmd = m.table.Update(msg)
+		return m, cmd
 	default:
 		m.textInput, cmd = m.textInput.Update(msg)
-		m.table, cmd2 = m.table.Update(msg)
-
-		return m, tea.Batch(cmd, cmd2)
+		val := m.textInput.Value()
+		for i, row := range m.table.Rows() {
+			if strings.Contains(row[2], val) {
+				m.table.SetCursor(i)
+				break
+			}
+		}
+		return m, cmd
 	}
 }
 
