@@ -96,14 +96,8 @@ func (m model) handleWindowSizeUpdate(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd
 	m.height = msg.Height
 	m.width = msg.Width
 
-	cmdWidth := msg.Width - 4 - 10 - 6 - 2
-	tableHeight := msg.Height - 16
-	columns := []table.Column{
-		{Title: "Time", Width: 4},
-		{Title: "Directory", Width: 10},
-		{Title: "Command", Width: cmdWidth},
-	}
-	m.table.SetColumns(columns)
+	tableHeight := m.height - 21
+	m.table.SetColumns(m.data.GetColumns(m.width))
 	m.table.SetHeight(tableHeight)
 	return m, tea.ClearScreen
 }
@@ -199,10 +193,12 @@ type DataHolder struct {
 }
 
 func (d *DataHolder) GetColumns(windowWidth int) []table.Column {
-	cmdWidth := windowWidth - 4 - 10 - 6 - 2
+	timeWidth := 4
+	dirWidth := 20
+	cmdWidth := windowWidth - timeWidth - dirWidth - (3 * 2) - 2
 	columns := []table.Column{
-		{Title: "Time", Width: 4},
-		{Title: "Directory", Width: 10},
+		{Title: "Time", Width: timeWidth},
+		{Title: "Directory", Width: dirWidth},
 		{Title: "Command", Width: cmdWidth},
 	}
 	return columns
@@ -219,25 +215,48 @@ func (d *DataHolder) GetRows(query string) []table.Row {
 			rows = append(rows, ToTableRow(row))
 		}
 	}
+	if len(rows) == 0 {
+		rows = []table.Row{
+			{"", "", "No commands found :/"},
+		}
+	}
 	return rows
 }
 
 func NewDataHolder() *DataHolder {
+	// fill with random data
 	rows := []DataRow{
+		{Time: time.Now(), Directory: "~/git/betterstack", Command: "git push"},
+		{Time: time.Now(), Directory: "~/git/betterstack", Command: "git commit"},
 		{Time: time.Now(), Directory: "~/git/betterstack", Command: "git push --force"},
 		{Time: time.Now(), Directory: "~/git/betterstack", Command: "git commit"},
 		{Time: time.Now(), Directory: "~/git/betterstack", Command: "git rebase"},
 		{Time: time.Now(), Directory: "~/git/betterstack", Command: "git stash"},
 		{Time: time.Now(), Directory: "~/git/betterstack", Command: "git pull"},
+		{Time: time.Now(), Directory: "~/git/betterstack", Command: "bin/dev"},
 		{Time: time.Now(), Directory: "~/git/logtail", Command: "git push"},
 		{Time: time.Now(), Directory: "~/git/logtail", Command: "git commit"},
 		{Time: time.Now(), Directory: "~/git/logtail", Command: "git rebase"},
 		{Time: time.Now(), Directory: "~/git/logtail", Command: "git merge"},
 		{Time: time.Now(), Directory: "~/git/logtail", Command: "git cherry-pick"},
+		{Time: time.Now(), Directory: "~/git/logtail", Command: "bin/dev-server"},
 		{Time: time.Now(), Directory: "~/git/uptime", Command: "git commit"},
 		{Time: time.Now(), Directory: "~/git/uptime", Command: "git push --force"},
 		{Time: time.Now(), Directory: "~/git/uptime", Command: "git merge"},
 		{Time: time.Now(), Directory: "~/git/uptime", Command: "git push"},
+		{Time: time.Now(), Directory: "~/git/uptime", Command: "git commit -m 'fix: fix something'"},
+		{Time: time.Now(), Directory: "~/git/uptime", Command: "bin/dev-server"},
+		{Time: time.Now(), Directory: "~", Command: "netstat -tlnp"},
+		{Time: time.Now(), Directory: "~", Command: "ps aux"},
+		{Time: time.Now(), Directory: "~", Command: "top"},
+		{Time: time.Now(), Directory: "~", Command: "htop"},
+		{Time: time.Now(), Directory: "~", Command: "ls -la"},
+		{Time: time.Now(), Directory: "~", Command: "tree dotfiles"},
+		{Time: time.Now(), Directory: "~", Command: "tree .config"},
+		{Time: time.Now(), Directory: "~", Command: "ncdu -x"},
+		{Time: time.Now(), Directory: "~", Command: "du -sh *"},
+		{Time: time.Now(), Directory: "~", Command: "du -sh .config/*"},
+		{Time: time.Now(), Directory: "~", Command: "man curl"},
 	}
 
 	return &DataHolder{
