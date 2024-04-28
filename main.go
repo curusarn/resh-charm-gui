@@ -3,16 +3,32 @@ package main
 // A simple program that opens the alternate screen buffer then counts down
 // from 5 and then exits.
 
+// Colors
+// lipgloss.Color("#0000FF") // good ol' 100% blue
+// lipgloss.Color("#04B575") // a green
+// lipgloss.Color("#3C3C3C") // a dark gray
+//
+// You can also specify color options for light and dark backgrounds:
+// lipgloss.AdaptiveColor{Light: "236", Dark: "248"}
+// CompleteColor specifies exact values for truecolor, ANSI256, and ANSI color profiles.
+// lipgloss.CompleteColor{True: "#0000FF", ANSI256: "86", ANSI: "5"}
+//
+// Both at the same time:
+// lipgloss.CompleteAdaptiveColor{
+//     Light: CompleteColor{TrueColor: "#d7ffae", ANSI256: "193", ANSI: "11"},
+//     Dark:  CompleteColor{TrueColor: "#d75fee", ANSI256: "163", ANSI: "5"},
+// }
+
 import (
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/curusarn/resh-charm-gui/table"
 )
 
 type model struct {
@@ -71,7 +87,10 @@ type (
 
 func (m model) Init() tea.Cmd {
 	// return tea.Batch(tick(), tea.EnterAltScreen)
-	return textinput.Blink
+	return tea.Batch(
+		tea.SetWindowTitle("RESH | Your Shell History"),
+		textinput.Blink,
+	)
 	// return nil
 }
 
@@ -100,6 +119,14 @@ func (m model) handleWindowSizeUpdate(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd
 	m.table.SetColumns(m.data.GetColumns(m.width))
 	m.table.SetHeight(tableHeight)
 	return m, tea.ClearScreen
+}
+
+func (m model) selectedCommand() string {
+	row := m.table.SelectedRow()
+	if len(row) == 0 {
+		return ""
+	}
+	return row[2]
 }
 
 func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
@@ -148,7 +175,7 @@ func (m model) View() string {
 		"(esc to quit)",
 	) + "\n\n" +
 		baseStyle.Render(m.table.View()) + "\n\n" +
-		fmt.Sprintf("    Let's go to %s! (selected)", m.table.SelectedRow()[1]) + "\n\n"
+		fmt.Sprintf("    Let's go to %s! (selected)", m.selectedCommand()) + "\n\n"
 
 	return s
 }
@@ -229,7 +256,7 @@ func NewDataHolder() *DataHolder {
 		{Time: time.Now(), Directory: "~/git/betterstack", Command: "git push"},
 		{Time: time.Now(), Directory: "~/git/betterstack", Command: "git commit"},
 		{Time: time.Now(), Directory: "~/git/betterstack", Command: "git push --force"},
-		{Time: time.Now(), Directory: "~/git/betterstack", Command: "git commit"},
+		{Time: time.Now(), Directory: "~/git/betterstack", Command: "git commit --message 'fix: fix something'"},
 		{Time: time.Now(), Directory: "~/git/betterstack", Command: "git rebase"},
 		{Time: time.Now(), Directory: "~/git/betterstack", Command: "git stash"},
 		{Time: time.Now(), Directory: "~/git/betterstack", Command: "git pull"},
